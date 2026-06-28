@@ -1,0 +1,21 @@
+Statistic,Value
+Total Customers,100
+Customers Who Waited,61
+Maximum Queue Length,2
+Total Simulation Time,467.4711
+Total Inter Arrival Time,460.1115
+Total Service Time,366.8461
+Total Waiting Time,222.4837
+Total Time In System,589.3298
+Total Idle Time,100.6250
+Average Inter Arrival Time,4.6011
+Average Service Time,3.6685
+Average Waiting Time,2.2248
+Average Time In System,5.8933
+Probability Of Waiting,0.6100
+Server Utilization,0.7847
+Server Idle Probability,0.2153
+Average Number In Queue,0.4759
+Average Number In System,1.2607
+Arrival Rate,0.2139
+Service Rate,0.2726
