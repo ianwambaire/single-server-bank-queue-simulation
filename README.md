@@ -8,6 +8,13 @@ The system models a bank where customers arrive randomly and are served by one t
 
 ---
 
+## Authors
+
+* **Ian Wambaire** - Author
+* **Denzel Sam Omondi**
+
+---
+
 ## Assignment Parameters
 
 The simulation uses the following default values:
@@ -144,7 +151,17 @@ BankQueueSimulation/
 
 ---
 
-## How to Run on Mac
+## Recommended Branch
+
+The recommended branch for running and demonstrating the project is:
+
+```text
+main
+```
+
+---
+
+## How to Run on macOS
 
 ### 1. Clone the repository
 
@@ -153,10 +170,10 @@ git clone https://github.com/ianwambaire/single-server-bank-queue-simulation.git
 cd single-server-bank-queue-simulation
 ```
 
-### 2. Switch to the GUI branch
+### 2. Make sure you are on the main branch
 
 ```bash
-git checkout gui-version
+git checkout main
 ```
 
 ### 3. Install Qt and CMake
@@ -183,10 +200,83 @@ make
 
 ---
 
+## How to Run on Windows
+
+### 1. Install required software
+
+Install the following:
+
+* **Git**
+* **CMake**
+* **Qt 6**
+* **MinGW or MSVC compiler**
+* **Visual Studio Code** or **Qt Creator**
+
+The easiest method is to install **Qt Creator** from the official Qt installer and include:
+
+* Qt 6.x
+* Qt Widgets
+* MinGW compiler, or MSVC if using Visual Studio Build Tools
+* CMake
+
+### 2. Clone the repository
+
+Open Command Prompt, PowerShell, or Git Bash:
+
+```bash
+git clone https://github.com/ianwambaire/single-server-bank-queue-simulation.git
+cd single-server-bank-queue-simulation
+```
+
+### 3. Make sure you are on the main branch
+
+```bash
+git checkout main
+```
+
+### 4. Build using Qt Creator
+
+1. Open **Qt Creator**.
+2. Click **Open Project**.
+3. Select the project’s `CMakeLists.txt` file.
+4. Choose a Qt kit, for example:
+
+   * Desktop Qt 6.x MinGW 64-bit, or
+   * Desktop Qt 6.x MSVC 64-bit
+5. Click **Configure Project**.
+6. Click **Build**.
+7. Click **Run**.
+
+### 5. Alternative Windows build using terminal
+
+If Qt and CMake are already added to your system PATH, run:
+
+```bash
+mkdir build
+cd build
+cmake ..
+cmake --build .
+```
+
+Then run the generated executable from the build output folder.
+
+If CMake cannot find Qt, specify the Qt installation path:
+
+```bash
+cmake .. -DCMAKE_PREFIX_PATH="C:\Qt\6.x.x\mingw_64"
+cmake --build .
+```
+
+Replace `6.x.x` with your installed Qt version.
+
+---
+
 ## How to Use the Application
 
 1. Open the application.
+
 2. Go to the **Configuration** tab.
+
 3. Use the default assignment values:
 
    * Customers: 100
@@ -195,10 +285,15 @@ make
    * Minimum Service Time: 1
    * Maximum Service Time: 6
    * Seed: 12345
+
 4. Click **Generate Random Simulation**.
+
 5. Open the **Simulation Results** tab to view the full table.
+
 6. Open the **Queue Statistics** tab to view performance measures.
+
 7. Click **Export Results to CSV** to save the results.
+
 8. Open the exported CSV files in Excel, Numbers, or Google Sheets.
 
 ---
@@ -238,23 +333,6 @@ It can:
 ### Excel / CSV Output
 
 ![Excel Output](screenshots/excel-output.png)
-
----
-
-## Branches
-
-| Branch      | Purpose                |
-| ----------- | ---------------------- |
-| main        | Main project branch    |
-| ian         | Stable console version |
-| gui-version | Final Qt GUI version   |
-| denzel      | Additional branch      |
-
-The recommended branch for demonstration is:
-
-```text
-gui-version
-```
 
 ---
 
