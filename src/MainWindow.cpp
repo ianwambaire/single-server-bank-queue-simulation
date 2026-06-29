@@ -7,6 +7,8 @@
 #include <QHeaderView>
 #include <QString>
 #include <QFont>
+#include <QColor>
+#include <QStatusBar>
 #include <fstream>
 #include <random>
 #include <iomanip>
@@ -30,6 +32,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     tabs->addTab(aboutTab, "About");
 
     setCentralWidget(tabs);
+    statusBar()->showMessage("Ready", 3000);
 }
 
 void MainWindow::setupConfigurationTab() {
@@ -138,6 +141,13 @@ void MainWindow::setupResultsTab() {
     font.setBold(true);
     title->setFont(font);
 
+    QHBoxLayout *filterLayout = new QHBoxLayout();
+    QLabel *filterLabel = new QLabel("Search:");
+    resultsSearchInput = new QLineEdit();
+    resultsSearchInput->setPlaceholderText("Type to filter rows...");
+    filterLayout->addWidget(filterLabel);
+    filterLayout->addWidget(resultsSearchInput);
+
     resultsTable = new QTableWidget();
     resultsTable->setColumnCount(10);
 
@@ -155,11 +165,15 @@ void MainWindow::setupResultsTab() {
 
     resultsTable->setHorizontalHeaderLabels(headers);
     resultsTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    resultsTable->setSortingEnabled(true);
 
     layout->addWidget(title);
+    layout->addLayout(filterLayout);
     layout->addWidget(resultsTable);
 
     resultsTab->setLayout(layout);
+
+    connect(resultsSearchInput, &QLineEdit::textChanged, this, &MainWindow::filterResultsTable);
 }
 
 void MainWindow::setupStatisticsTab() {
@@ -239,7 +253,7 @@ void MainWindow::generateSimulation() {
     populateResultsTable();
     populateStatistics();
 
-    QMessageBox::information(this, "Simulation Complete", "Random simulation generated successfully.");
+    statusBar()->showMessage("Random simulation generated successfully.", 5000);
     tabs->setCurrentWidget(resultsTab);
 }
 
@@ -274,6 +288,11 @@ void MainWindow::importCSV() {
         return;
     }
 
+    if (importedIAT.size() != importedService.size()) {
+        QMessageBox::warning(this, "Invalid CSV", "Inter-arrival and service time columns must have the same number of rows.");
+        return;
+    }
+
     int numberOfCustomers = importedIAT.size();
 
     QueueSimulator simulator(
@@ -291,7 +310,7 @@ void MainWindow::importCSV() {
     populateResultsTable();
     populateStatistics();
 
-    QMessageBox::information(this, "Import Complete", "CSV data imported and simulation processed successfully.");
+    statusBar()->showMessage("CSV data imported and simulation processed successfully.", 5000);
     tabs->setCurrentWidget(resultsTab);
 }
 
@@ -327,7 +346,7 @@ void MainWindow::exportCSV() {
 
     CSVHandler::exportQueueStatistics(stats, statsFile.toStdString());
 
-    QMessageBox::information(this, "Export Complete", "Simulation results and queue statistics exported successfully.");
+    statusBar()->showMessage("Simulation results and queue statistics exported successfully.", 5000);
 }
 
 void MainWindow::createSampleCSV() {
@@ -369,18 +388,20 @@ void MainWindow::createSampleCSV() {
 
     file.close();
 
-    QMessageBox::information(this, "Sample CSV Created", "Sample CSV input file created successfully.");
+    statusBar()->showMessage("Sample CSV input file created successfully.", 5000);
 }
 
 void MainWindow::clearSimulation() {
     customers.clear();
     resultsTable->setRowCount(0);
+    resultsSearchInput->clear();
     clearStatistics();
 
-    QMessageBox::information(this, "Cleared", "Simulation data cleared successfully.");
+    statusBar()->showMessage("Simulation data cleared successfully.", 5000);
 }
 
 void MainWindow::populateResultsTable() {
+    resultsTable->setSortingEnabled(false);
     resultsTable->setRowCount(customers.size());
 
     for (int row = 0; row < static_cast<int>(customers.size()); row++) {
@@ -391,11 +412,49 @@ void MainWindow::populateResultsTable() {
         resultsTable->setItem(row, 2, new QTableWidgetItem(QString::number(c.arrivalTime, 'f', 2)));
         resultsTable->setItem(row, 3, new QTableWidgetItem(QString::number(c.serviceTime, 'f', 2)));
         resultsTable->setItem(row, 4, new QTableWidgetItem(QString::number(c.serviceStartTime, 'f', 2)));
-        resultsTable->setItem(row, 5, new QTableWidgetItem(QString::number(c.waitingTime, 'f', 2)));
+        QTableWidgetItem *waitItem = new QTableWidgetItem(QString::number(c.waitingTime, 'f', 2));
+        if (c.waitingTime > 5.0) {
+            waitItem->setBackground(QColor(255, 212, 212));
+        } else if (c.waitingTime > 0.0) {
+            waitItem->setBackground(QColor(255, 245, 204));
+        }
+        resultsTable->setItem(row, 5, waitItem);
         resultsTable->setItem(row, 6, new QTableWidgetItem(QString::number(c.departureTime, 'f', 2)));
         resultsTable->setItem(row, 7, new QTableWidgetItem(QString::number(c.timeInSystem, 'f', 2)));
-        resultsTable->setItem(row, 8, new QTableWidgetItem(QString::number(c.serverIdleTime, 'f', 2)));
-        resultsTable->setItem(row, 9, new QTableWidgetItem(QString::number(c.queueLength)));
+        QTableWidgetItem *idleItem = new QTableWidgetItem(QString::number(c.serverIdleTime, 'f', 2));
+        if (c.serverIdleTime > 0.0) {
+            idleItem->setBackground(QColor(222, 239, 255));
+        }
+        resultsTable->setItem(row, 8, idleItem);
+
+        QTableWidgetItem *queueItem = new QTableWidgetItem(QString::number(c.queueLength));
+        if (c.queueLength >= 3) {
+            queueItem->setBackground(QColor(255, 228, 196));
+        }
+        resultsTable->setItem(row, 9, queueItem);
+    }
+
+    resultsTable->setSortingEnabled(true);
+    filterResultsTable(resultsSearchInput->text());
+}
+
+void MainWindow::filterResultsTable(const QString& text) {
+    QString query = text.trimmed();
+
+    for (int row = 0; row < resultsTable->rowCount(); row++) {
+        bool matches = query.isEmpty();
+
+        if (!matches) {
+            for (int col = 0; col < resultsTable->columnCount(); col++) {
+                QTableWidgetItem *item = resultsTable->item(row, col);
+                if (item && item->text().contains(query, Qt::CaseInsensitive)) {
+                    matches = true;
+                    break;
+                }
+            }
+        }
+
+        resultsTable->setRowHidden(row, !matches);
     }
 }
 

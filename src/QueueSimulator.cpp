@@ -97,6 +97,10 @@ std::vector<Customer> QueueSimulator::runSimulationFromInput(
 QueueStatistics QueueSimulator::calculateStatistics(const std::vector<Customer>& customers) {
     QueueStatistics stats{};
 
+    if (customers.empty()) {
+        return stats;
+    }
+
     stats.totalCustomers = customers.size();
     stats.customersWhoWaited = 0;
     stats.maxQueueLength = 0;
@@ -133,23 +137,27 @@ QueueStatistics QueueSimulator::calculateStatistics(const std::vector<Customer>&
     stats.probabilityOfWaiting =
         static_cast<double>(stats.customersWhoWaited) / stats.totalCustomers;
 
-    stats.serverUtilization =
-        stats.totalServiceTime / stats.totalSimulationTime;
+    if (stats.totalSimulationTime > 0.0) {
+        stats.serverUtilization =
+            stats.totalServiceTime / stats.totalSimulationTime;
 
-    stats.serverIdleProbability =
-        stats.totalIdleTime / stats.totalSimulationTime;
+        stats.serverIdleProbability =
+            stats.totalIdleTime / stats.totalSimulationTime;
 
-    stats.averageNumberInQueue =
-        stats.totalWaitingTime / stats.totalSimulationTime;
+        stats.averageNumberInQueue =
+            stats.totalWaitingTime / stats.totalSimulationTime;
 
-    stats.averageNumberInSystem =
-        stats.totalTimeInSystem / stats.totalSimulationTime;
+        stats.averageNumberInSystem =
+            stats.totalTimeInSystem / stats.totalSimulationTime;
 
-    stats.arrivalRate =
-        stats.totalCustomers / stats.totalSimulationTime;
+        stats.arrivalRate =
+            stats.totalCustomers / stats.totalSimulationTime;
+    }
 
-    stats.serviceRate =
-        stats.totalCustomers / stats.totalServiceTime;
+    if (stats.totalServiceTime > 0.0) {
+        stats.serviceRate =
+            stats.totalCustomers / stats.totalServiceTime;
+    }
 
     return stats;
 }

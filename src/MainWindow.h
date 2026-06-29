@@ -42,6 +42,7 @@ private:
     QPushButton *sampleButton;
     QPushButton *clearButton;
 
+    QLineEdit *resultsSearchInput;
     QTableWidget *resultsTable;
     QGridLayout *statisticsLayout;
     QTextEdit *aboutText;
@@ -64,6 +65,7 @@ private slots:
     void exportCSV();
     void createSampleCSV();
     void clearSimulation();
+    void filterResultsTable(const QString& text);
 
 public:
     MainWindow(QWidget *parent = nullptr);
