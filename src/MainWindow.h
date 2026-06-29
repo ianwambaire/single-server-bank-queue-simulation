@@ -45,6 +45,10 @@ private:
     QLineEdit *resultsSearchInput;
     QTableWidget *resultsTable;
     QGridLayout *statisticsLayout;
+    QLabel *kpiAverageWaitValue;
+    QLabel *kpiUtilizationValue;
+    QLabel *kpiMaxQueueValue;
+    QLabel *kpiProbabilityWaitValue;
     QTextEdit *aboutText;
 
     std::vector<Customer> customers;
