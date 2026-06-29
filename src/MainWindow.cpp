@@ -8,10 +8,45 @@
 #include <QString>
 #include <QFont>
 #include <QColor>
+#include <QBrush>
 #include <QStatusBar>
+#include <QFrame>
 #include <fstream>
 #include <random>
 #include <iomanip>
+
+namespace {
+QFrame* createKpiCard(const QString& title, QLabel*& valueLabel, const QString& backgroundColor) {
+    QFrame *card = new QFrame();
+    card->setFrameShape(QFrame::StyledPanel);
+    card->setStyleSheet(
+        QString("QFrame { background-color: %1; border: 1px solid #d6d6d6; border-radius: 8px; }").arg(backgroundColor)
+    );
+
+    QVBoxLayout *layout = new QVBoxLayout(card);
+    layout->setContentsMargins(14, 12, 14, 12);
+    layout->setSpacing(6);
+
+    QLabel *titleLabel = new QLabel(title);
+    QFont titleFont;
+    titleFont.setPointSize(9);
+    titleFont.setBold(true);
+    titleLabel->setFont(titleFont);
+    titleLabel->setStyleSheet("color: #1f2937;");
+
+    valueLabel = new QLabel("--");
+    QFont valueFont;
+    valueFont.setPointSize(16);
+    valueFont.setBold(true);
+    valueLabel->setFont(valueFont);
+    valueLabel->setStyleSheet("color: #111827;");
+
+    layout->addWidget(titleLabel);
+    layout->addWidget(valueLabel);
+
+    return card;
+}
+}
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     tabs = new QTabWidget(this);
@@ -185,9 +220,24 @@ void MainWindow::setupStatisticsTab() {
     font.setBold(true);
     title->setFont(font);
 
+    QGridLayout *kpiLayout = new QGridLayout();
+    kpiLayout->setHorizontalSpacing(10);
+    kpiLayout->setVerticalSpacing(10);
+
+    QFrame *avgWaitCard = createKpiCard("Average Waiting Time", kpiAverageWaitValue, "#fff7e8");
+    QFrame *utilizationCard = createKpiCard("Server Utilization", kpiUtilizationValue, "#e8f5ff");
+    QFrame *maxQueueCard = createKpiCard("Maximum Queue Length", kpiMaxQueueValue, "#fdeeee");
+    QFrame *probWaitCard = createKpiCard("Probability of Waiting", kpiProbabilityWaitValue, "#eef8ef");
+
+    kpiLayout->addWidget(avgWaitCard, 0, 0);
+    kpiLayout->addWidget(utilizationCard, 0, 1);
+    kpiLayout->addWidget(maxQueueCard, 1, 0);
+    kpiLayout->addWidget(probWaitCard, 1, 1);
+
     statisticsLayout = new QGridLayout();
 
     layout->addWidget(title);
+    layout->addLayout(kpiLayout);
     layout->addLayout(statisticsLayout);
     layout->addStretch();
 
@@ -415,8 +465,10 @@ void MainWindow::populateResultsTable() {
         QTableWidgetItem *waitItem = new QTableWidgetItem(QString::number(c.waitingTime, 'f', 2));
         if (c.waitingTime > 5.0) {
             waitItem->setBackground(QColor(255, 212, 212));
+            waitItem->setForeground(QBrush(QColor(17, 24, 39)));
         } else if (c.waitingTime > 0.0) {
             waitItem->setBackground(QColor(255, 245, 204));
+            waitItem->setForeground(QBrush(QColor(17, 24, 39)));
         }
         resultsTable->setItem(row, 5, waitItem);
         resultsTable->setItem(row, 6, new QTableWidgetItem(QString::number(c.departureTime, 'f', 2)));
@@ -424,12 +476,14 @@ void MainWindow::populateResultsTable() {
         QTableWidgetItem *idleItem = new QTableWidgetItem(QString::number(c.serverIdleTime, 'f', 2));
         if (c.serverIdleTime > 0.0) {
             idleItem->setBackground(QColor(222, 239, 255));
+            idleItem->setForeground(QBrush(QColor(17, 24, 39)));
         }
         resultsTable->setItem(row, 8, idleItem);
 
         QTableWidgetItem *queueItem = new QTableWidgetItem(QString::number(c.queueLength));
         if (c.queueLength >= 3) {
             queueItem->setBackground(QColor(255, 228, 196));
+            queueItem->setForeground(QBrush(QColor(17, 24, 39)));
         }
         resultsTable->setItem(row, 9, queueItem);
     }
@@ -460,6 +514,11 @@ void MainWindow::filterResultsTable(const QString& text) {
 
 void MainWindow::populateStatistics() {
     clearStatistics();
+
+    kpiAverageWaitValue->setText(QString::number(stats.averageWaitingTime, 'f', 2) + " min");
+    kpiUtilizationValue->setText(QString::number(stats.serverUtilization * 100, 'f', 1) + "%");
+    kpiMaxQueueValue->setText(QString::number(stats.maxQueueLength));
+    kpiProbabilityWaitValue->setText(QString::number(stats.probabilityOfWaiting * 100, 'f', 1) + "%");
 
     QStringList labels;
     QStringList values;
@@ -505,6 +564,8 @@ void MainWindow::populateStatistics() {
     for (int i = 0; i < labels.size(); i++) {
         QLabel *label = new QLabel(labels[i] + ":");
         QLabel *value = new QLabel(values[i]);
+        label->setStyleSheet("color: #1f2937;");
+        value->setStyleSheet("color: #111827;");
 
         QFont labelFont;
         labelFont.setBold(true);
@@ -516,6 +577,11 @@ void MainWindow::populateStatistics() {
 }
 
 void MainWindow::clearStatistics() {
+    kpiAverageWaitValue->setText("--");
+    kpiUtilizationValue->setText("--");
+    kpiMaxQueueValue->setText("--");
+    kpiProbabilityWaitValue->setText("--");
+
     while (QLayoutItem *item = statisticsLayout->takeAt(0)) {
         if (item->widget()) {
             delete item->widget();
